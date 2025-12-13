@@ -144,7 +144,7 @@ async function showSummary(state, totalQuestions) {
         console.log(chalk.gray("No questions were answered."));
     }
 
-    // 3. FINAL SCORE (Printed LAST now)
+    // 3. FINAL SCORE 
     console.log(chalk.blue("-------------------------------------"));
     console.log(`Final Score:    ${chalk.yellow(state.score)} / ${totalQuestions} (${percent}%)`);
     console.log(`Total Time:     ${duration}s\n`);
