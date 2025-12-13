@@ -1,0 +1,29 @@
+{
+  "name": "trivia-cli",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "This project is a command-line trivia game built with Node.js and vanilla JavaScript.   It was developed as a summative lab to practice handling user input, managing program flow, working with arrays and objects, and using asynchronous JavaScript with timers.",
+  "main": "index.js",
+  "bin": {
+    "jstrivia": "./bin/index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/penina26/trivia-cli.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/penina26/trivia-cli/issues"
+  },
+  "homepage": "https://github.com/penina26/trivia-cli#readme",
+  "dependencies": {
+    "@inquirer/prompts": "^3.0.0",
+    "chalk": "^4.1.2",
+    "commander": "^11.0.0"
+  }
+}
