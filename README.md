@@ -34,7 +34,7 @@ Follow these steps to set up the project locally.
 
 1.  **Clone the repository**
     ```bash
-    git clone [https://github.com/penina26/trivia-cli.git](https://github.com/penina26/trivia-cli.git)
+    git clone https://github.com/penina26/trivia-cli.git
     cd js-trivia-cli
     ```
 
@@ -63,6 +63,7 @@ Follow these steps to set up the project locally.
 If you have linked the project globally:
 ```bash
 jstrivia
+```
 
 ## 📂 Project Structure
 
