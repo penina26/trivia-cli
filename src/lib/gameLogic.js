@@ -2,6 +2,7 @@ import chalk from "chalk";
 import { select, input, checkbox } from "@inquirer/prompts";
 import { questions } from "./questions.js";
 
+// We store the timer ID globally so we can stop it if the user finishes early
 let globalTimer;
 
 export async function startQuiz(state) {
@@ -10,6 +11,7 @@ export async function startQuiz(state) {
     console.log(chalk.bold.yellow("🤯  JavaScript Trivia CLI"));
     console.log(chalk.blue("=====================================\n"));
 
+    // --- 1. User Setup ---
     if (!state.userName) {
         const name = await input({ message: "Enter your name player:" });
         state.userName = name.trim() || "Player";
@@ -18,17 +20,22 @@ export async function startQuiz(state) {
     console.log(chalk.green(`\nWelcome, ${chalk.bold(state.userName)}! Let's get started.`));
     console.log(`You have ${chalk.bold(state.timeLimit)} seconds to complete the quiz.\n`);
 
+    // --- 2. Randomization ---
     const shuffledQuestions = shuffleArray([...questions]);
 
+    // Start the session timer
     state.startTime = Date.now();
 
+    // --- 3. Global Timer Logic ---
     const timeRemainingMs = state.timeLimit * 1000;
+
     globalTimer = setTimeout(() => {
         console.log(chalk.bold.red("\n\n⏲️  TIME IS UP! ⏲️"));
         console.log(chalk.gray(`Sorry ${state.userName}, you ran out of time.`));
         showSummary(state, shuffledQuestions.length);
     }, timeRemainingMs);
 
+    // --- 4. Main Quiz Loop ---
     for (const [index, q] of shuffledQuestions.entries()) {
 
         if (isTimeUp(state)) break;
@@ -42,14 +49,24 @@ export async function startQuiz(state) {
         let answer;
 
         try {
+            //  Instrucions and questions
             if (q.type === 'select') {
-                answer = await select({ message: q.question, choices: q.choices });
+                // Single Choice
+                answer = await select({
+                    message: `${q.question} ${chalk.gray("(Use arrow keys to choose)")}`,
+                    choices: q.choices
+                });
             } else if (q.type === 'input') {
+                // Text Input
                 answer = await input({
                     message: `${q.question} ${chalk.gray("(Type your answer)")}`
                 });
             } else if (q.type === 'checkbox') {
-                answer = await checkbox({ message: q.question, choices: q.choices });
+                // Multiple Choice
+                answer = await checkbox({
+                    message: `${q.question} ${chalk.gray("(Press <space> to select, <enter> to finish)")}`,
+                    choices: q.choices
+                });
             }
         } catch (error) {
             break;
@@ -63,9 +80,9 @@ export async function startQuiz(state) {
         const timeTaken = Math.floor((Date.now() - questionStart) / 1000);
         const isCorrect = validateAnswer(q, answer);
 
+        // Immediate Feedback
         if (isCorrect) {
             console.log(chalk.green("✅ Correct!"));
-            state.score++;
         } else {
             console.log(chalk.red("❌ Incorrect."));
         }
@@ -101,10 +118,10 @@ function isTimeUp(state) {
 
 function validateAnswer(q, userAnswer) {
     if (!userAnswer) return false;
+
     if (Array.isArray(q.correctAnswer)) {
-        const correct = q.correctAnswer.slice().sort().toString();
-        const user = userAnswer.slice().sort().toString();
-        return correct === user;
+        if (userAnswer.length !== q.correctAnswer.length) return false;
+        return q.correctAnswer.every(item => userAnswer.includes(item));
     } else {
         return userAnswer.trim().toLowerCase() === q.correctAnswer.toLowerCase();
     }
@@ -115,23 +132,27 @@ function formatAnswer(ans) {
     return Array.isArray(ans) ? ans.join(", ") : ans;
 }
 
-// --- REARRANGED SUMMARY FUNCTION ---
+// --- Summary Function ---
+
 async function showSummary(state, totalQuestions) {
-    // 1. Calculations
+    // Filter results to calculate score
+    const score = state.results.filter(r => r.isCorrect).length;
+    state.score = score;
+
     const now = Date.now();
     const duration = state.startTime ? Math.floor((now - state.startTime) / 1000) : 0;
-    const percent = totalQuestions > 0 ? Math.round((state.score / totalQuestions) * 100) : 0;
+    const percent = totalQuestions > 0 ? Math.round((score / totalQuestions) * 100) : 0;
 
     console.log(chalk.blue("\n====================================="));
     console.log(chalk.bold(`      📈 Results for ${state.userName}`));
     console.log(chalk.blue("=====================================\n"));
 
-    // 2. DETAILED REPORT (Printed FIRST now)
     console.log(chalk.underline("Detailed Report:\n"));
 
     if (state.results.length > 0) {
         state.results.forEach((r, i) => {
             console.log(`${i + 1}. ${chalk.bold(r.question)}`);
+
             if (r.isCorrect) {
                 console.log(chalk.green(`   ✅ Your Answer: ${formatAnswer(r.userAnswer)}`));
             } else {
@@ -144,9 +165,9 @@ async function showSummary(state, totalQuestions) {
         console.log(chalk.gray("No questions were answered."));
     }
 
-    // 3. FINAL SCORE 
+    // Final Scores
     console.log(chalk.blue("-------------------------------------"));
-    console.log(`Final Score:    ${chalk.yellow(state.score)} / ${totalQuestions} (${percent}%)`);
+    console.log(`Final Score:    ${chalk.yellow(score)} / ${totalQuestions} (${percent}%)`);
     console.log(`Total Time:     ${duration}s\n`);
 
     if (percent === 100) {
@@ -158,7 +179,7 @@ async function showSummary(state, totalQuestions) {
     }
     console.log(chalk.blue("=====================================\n"));
 
-    // 4. Menu
+    // Menu
     const choice = await select({
         message: "What would you like to do next?",
         choices: [
